@@ -1,8 +1,6 @@
 import prisma from "../config/config.js";
 import { validationResult } from "express-validator";
 import { sendCreated, sendDelete, sendEmpty, sendError, sendExsited, sendRemoveImage, sendSuccess, sendUpdate, sendUploadImage, sendValidator } from "../service/reponseHandler.js";
-import path from "path";
-import { send } from "process";
 
 //create new employee
 export const addEmployee = async (req, res) => {
