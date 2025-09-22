@@ -1,0 +1,248 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+//model
+model Users {
+  id        String    @id @default(uuid())
+  firstName String
+  email     String    @unique
+  password  String
+  profile   String?
+  statu     Boolean   @default(false)
+  role      Role      @default(user)
+  otp       Json?
+  createAt  DateTime  @default(now())
+  updateAt  DateTime  @updatedAt
+  coupon    Coupons[]
+  car       Rental[]
+}
+
+model Employees {
+  id            String   @id @default(uuid())
+  firstName     String
+  lastName      String
+  gender        String?
+  email         String   @unique
+  phone         Int      @unique
+  village       String
+  distrit       String
+  provinced     String
+  natinalIdCard String   @unique
+  salary        Float
+  birthday      DateTime
+  profile       String   @unique
+  department    String
+  pricePerDay   Float?
+  statu         Boolean  @default(true) //New der
+  createAt      DateTime @default(now())
+  updateAt      DateTime @updatedAt
+  rental        Rental[]
+}
+
+model Promotions {
+  id              String          @id @default(uuid())
+  titel           String
+  description     String
+  image           String
+  discount_type   Discount_Type
+  discount        Float
+  min_rent_amount Float
+  status          Statu_Promotion @default(active)
+  start_date      DateTime
+  end_date        DateTime
+  createAt        DateTime        @default(now())
+  updateAt        DateTime        @updatedAt
+  Rental          Rental[]
+}
+
+model Coupons {
+  id          String          @id @default(uuid())
+  user_id     String
+  code        String          @unique
+  description String
+  discount    Float
+  status      Statu_Promotion @default(active)
+  start_date  DateTime?
+  end_date    DateTime?
+  createAt    DateTime        @default(now())
+  updateAt    DateTime        @updatedAt
+  user        Users           @relation(fields: [user_id], references: [id])
+  Rental      Rental[]
+}
+
+// enum
+// enum users
+enum Role {
+  user
+  admin
+  superAdmin
+  sofer
+}
+
+enum Statu_Promotion {
+  active
+  inactive
+  expired
+}
+
+enum Discount_Type {
+  percent
+  currency
+}
+
+model CarType {
+  id        String   @id @default(uuid())
+  name      String
+  icon      String
+  car       Car[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Table Insurance
+model Insurance {
+  id        String   @id @default(uuid())
+  name      String
+  icon      String
+  level     String
+  car       Car[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Table Bank
+model Bank {
+  id        String   @id @default(uuid())
+  name      String
+  icon      String
+  qr_code   String
+  rental    Rental[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Table Car
+model Car {
+  id            String    @id @default(uuid())
+  carTypeId     String
+  insuranceId   String
+  name          String
+  image_profile String
+  image_front   String
+  image_side    String
+  image_behind  String
+  image_in      String
+  year          String
+  plate_city    String
+  plate_text    String
+  plate_number  Int
+  gps           String
+  car_seat      String
+  car_gear      String
+  color         String
+  status        String
+  price         Float
+  book          Float? //new add
+  deposit       Float? //new add
+  rental        Rental[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  carType       CarType   @relation(fields: [carTypeId], references: [id])
+  insurance     Insurance @relation(fields: [insuranceId], references: [id])
+}
+
+model Review {
+  id            String   @id @default(uuid())
+  rentalId      String   @unique
+  carPoint      Int?
+  employeePoint Int?
+  comment       String?
+  rental        Rental   @relation(fields: [rentalId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Repair {
+  id           String   @id @default(uuid())
+  rental_id    String
+  receiptImg   String?
+  receiptPrice Float?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  rental       Rental   @relation(fields: [rental_id], references: [id], onDelete: Cascade)
+}
+
+model Penalty {
+  id           String   @id @default(uuid())
+  rental_id    String
+  penaltyImg   String?
+  penaltyPrice Float
+  detail       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  rental       Rental   @relation(fields: [rental_id], references: [id], onDelete: Cascade)
+}
+
+model Rental {
+  id                String   @id @default(uuid())
+  promotion_id      String?
+  coupon_id         String?
+  car_id            String
+  bank_id           String?
+  user_id           String
+  employee_id       String?
+  first_name        String
+  last_name         String
+  phone             Int
+  village           String
+  distrit           String
+  provinced         String
+  id_or_passport    String //image
+  dri_icenes        String? //image
+  pay_booking_image String? //image
+  card_person       String? //image  add
+  pay_full_image    String?
+  booking_pay       Float?
+  pay_full          Float? //add
+  Deposit           Float?
+  date_start_rent   DateTime
+  date_end_rent     DateTime
+  localtion         String?
+  employee_pay      Float? //New
+  coupon_discount   Float?
+
+  statu          Statu       @default(booking)
+  deletestatu    Boolean?    @default(false)
+  statu_pay_full Boolean     @default(false)
+  user           Users       @relation(fields: [user_id], references: [id])
+  car            Car         @relation(fields: [car_id], references: [id])
+  bank           Bank?       @relation(fields: [bank_id], references: [id])
+  employee       Employees?  @relation(fields: [employee_id], references: [id])
+  promotion      Promotions? @relation(fields: [promotion_id], references: [id])
+  coupon         Coupons?    @relation(fields: [coupon_id], references: [id])
+  review         Review?     @relation
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Repair    Repair[]
+  Penalty   Penalty[]
+}
+
+enum Statu {
+  cancel
+  usercancel
+  booking
+  booking_completed
+  paying
+  pay_completed
+  useing
+  take_back_completed
+  penalty_done
+  repair_done
+}
