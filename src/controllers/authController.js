@@ -49,8 +49,18 @@ export const login = async (req, res) => {
         const accessToken = generateAccessToken(user.id, user.role);
         const refreshToken = generateRefreshToken(user.id, user.role);
 
-        res.cookie('accessToken', accessToken, { httpOnly: true });
-        res.cookie('refreshToken', refreshToken, { httpOnly: true });
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "none",
+            // maxAge: 1000 * 60 * 15
+        });
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "none",
+            // maxAge: 1000 * 60 * 60 * 24 * 7 
+        });
 
         await prisma.users.update({
             where: { id: user?.id },
@@ -97,7 +107,7 @@ export const loginAdmin = async (req, res) => {
         res.cookie('accessToken', accessToken, { httpOnly: true });
         res.cookie('refreshToken', refreshToken, { httpOnly: true });
 
-        res.status(200).json({ message: 'Admin login successfully', role: user.role });
+        res.status(200).json({ message: 'Admin login successfully', token: accessToken });
     } catch (error) {
         res.status(500).json({ errors: error.message });
     }
